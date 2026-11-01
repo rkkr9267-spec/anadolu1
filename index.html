@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anadolu</title>
+  <style>
+    @font-face {
+      font-family: "HelveticaNeueCyr";
+      src: url("HelveticaNeueCyr-Thin.ttf") format("truetype");
+      font-weight: 400;
+    }
+    body {
+      margin: 0;
+      background: #1E1712;
+      color: #EFE2C6;
+      font-family: "HelveticaNeueCyr", Arial, sans-serif;
+      text-align: center;
+    }
+
+    .stage { position: relative; height: 100vh; overflow: hidden; }
+    .glow {
+      position: absolute; inset: 0; opacity: 0;
+      transition: opacity 1.6s ease; pointer-events: none;
+      background:
+        radial-gradient(circle at 8% 30%, rgba(242,179,90,.4), transparent 45%),
+        radial-gradient(circle at 92% 26%, rgba(242,179,90,.4), transparent 45%);
+    }
+    .lit .glow { opacity: 1; }
+
+    /* фонари */
+    .lamp {
+      position: absolute; top: 0;
+      height: 50vh; aspect-ratio: 116 / 570;
+      border: 0; background: none; padding: 0; cursor: pointer;
+    }
+    .lamp.left { left: 2%; }
+    .lamp.right { right: 2%; height: 42vh; }
+    .lamp img {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      transition: opacity 1.2s ease; pointer-events: none;
+    }
+    .lamp .on { opacity: 0; }
+    .lit .lamp .on { opacity: 1; }
+    .lit .lamp .off { opacity: 0; }
+
+    /* логотип */
+    .intro {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 0 96px; pointer-events: none;
+      transition: opacity .8s ease .4s;
+    }
+    .lit .intro { opacity: 0; transition: opacity .5s ease; }
+    .logo { width: min(100%, 360px); height: auto; margin-bottom: 20px; }
+    .tagline { font-size: 22px; color: #B5A184; margin: 0 0 16px; }
+    .hint { font-size: 17px; color: #B8833C; font-style: italic; margin: 0; }
+
+    /* панель с вкладками */
+    .panel {
+      position: absolute; top: 5%; bottom: 7%;
+      left: 0; right: 0; margin: 0 auto;
+      width: min(560px, calc(100% - 192px));
+      display: flex; flex-direction: column;
+      opacity: 0; pointer-events: none;
+      transition: opacity .5s ease;
+    }
+    .lit .panel {
+      opacity: 1; pointer-events: auto;
+      transition: opacity 1.4s ease .5s;
+    }
+    .tabs {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      gap: 6px 16px; margin-bottom: 12px; flex: none;
+    }
+    .tab {
+      background: none; border: 0; border-bottom: 1px solid transparent;
+      color: #B5A184; font-family: inherit; font-size: 15px;
+      letter-spacing: 1px; padding: 4px 2px; cursor: pointer;
+    }
+    .tab.active { color: #B8833C; border-bottom-color: #B8833C; }
+
+    .pages { flex: 1; overflow-y: auto; padding: 8px 4px 24px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    h2 {
+      font-family: Georgia, serif; font-style: italic; font-weight: 400;
+      font-size: 28px; color: #B8833C; margin: 8px 0 20px;
+    }
+    h3 {
+      font-family: Georgia, serif; font-style: italic; font-weight: 400;
+      font-size: 22px; color: #B8833C; margin: 28px 0 14px;
+    }
+    .dish { margin-bottom: 20px; text-align: left; }
+    .row { display: flex; justify-content: space-between; font-size: 19px; }
+    .price { color: #B8833C; white-space: nowrap; margin-left: 12px; }
+    .desc { margin: 4px 0 0; font-size: 15px; color: #B5A184; }
+
+    .about p { text-align: left; font-size: 16px; line-height: 1.6; margin: 0 0 14px; }
+    .about .info { color: #B5A184; font-size: 15px; }
+
+    form { text-align: left; }
+    label { display: block; font-size: 13px; color: #B5A184; margin-top: 12px; }
+    input, select {
+      width: 100%; box-sizing: border-box; margin-top: 4px; padding: 10px;
+      background: #2A2019; border: 1px solid #4A3A28; border-radius: 4px;
+      color: #EFE2C6; font-family: inherit; font-size: 16px; color-scheme: dark;
+    }
+    .submit {
+      margin-top: 20px; width: 100%; padding: 12px;
+      background: #B8833C; color: #1E1712; border: 0; border-radius: 4px;
+      font-family: inherit; font-size: 17px; cursor: pointer;
+    }
+    .thanks { display: none; margin-top: 16px; color: #B8833C; font-style: italic; }
+    .thanks.show { display: block; }
+
+    .credit {
+      position: absolute; bottom: 10px; left: 0; right: 0;
+      font-size: 12px; letter-spacing: 1px; color: #6E5A3E;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <section class="stage" id="stage">
+    <div class="glow"></div>
+
+    <button class="lamp left" aria-label="Зажечь фонари">
+      <img class="off" src="lantern_off.svg" alt="">
+      <img class="on" src="lantern_on.svg" alt="">
+    </button>
+    <button class="lamp right" aria-label="Зажечь фонари">
+      <img class="off" src="lantern_off.svg" alt="">
+      <img class="on" src="lantern_on.svg" alt="">
+    </button>
+
+    <div class="intro">
+      <img class="logo" src="anadolu_emblem_yellow.svg" alt="Anadolu">
+      <p class="tagline">вкус Анатолии в сердце Москвы</p>
+      <p class="hint">коснись фонарей</p>
+    </div>
+
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" data-page="p-menu">Menu</button>
+        <button class="tab" data-page="p-about">About us</button>
+        <button class="tab" data-page="p-reserve">Reservation</button>
+      </div>
+
+      <div class="pages">
+        <!-- МЕНЮ -->
+        <div class="page active" id="p-menu">
+          <h3>Закуски</h3>
+          <div class="dish">
+            <div class="row"><span>Мезе-сет</span><span class="price">690 ₽</span></div>
+            <p class="desc">хумус, баба гануш, дзадзики, лаваш</p>
+          </div>
+          <div class="dish">
+            <div class="row"><span>Долма с йогуртом</span><span class="price">490 ₽</span></div>
+            <p class="desc">виноградные листья, рис, мята</p>
+          </div>
+          <div class="dish">
+            <div class="row"><span>Халлуми на гриле</span><span class="price">550 ₽</span></div>
+            <p class="desc">с мёдом и тимьяном</p>
+          </div>
+
+          <h3>Десерты</h3>
+          <div class="dish">
+            <div class="row"><span>Баклава</span><span class="price">420 ₽</span></div>
+            <p class="desc">с фисташкой и мёдом</p>
+          </div>
+          <div class="dish">
+            <div class="row"><span>Кюнефе</span><span class="price">480 ₽</span></div>
+            <p class="desc">горячий сыр, кадаиф, сироп</p>
+          </div>
+          <div class="dish">
+            <div class="row"><span>Турецкий кофе</span><span class="price">250 ₽</span></div>
+            <p class="desc">на песке, с лукумом</p>
+          </div>
+        </div>
+
+        <!-- ABOUT US -->
+        <div class="page about" id="p-about">
+          <h2>About us</h2>
+          <p>Anadolu — это ресторан, где турецкая и греческая кухни встречаются за одним столом. Анатолия всегда была перекрёстком культур, и мы хотим передать это вкусом.</p>
+          <p>Приглушённый свет, фонари, ковры и подушки. У нас есть зона без стульев, где можно сидеть так, как принято на Востоке: не спеша и в компании.</p>
+          <p class="info">Адрес: Москва, адрес уточняется<br>Время работы: ежедневно, 12:00–23:00<br>Телефон: +7 (000) 000-00-00</p>
+        </div>
+
+        <!-- RESERVATION -->
+        <div class="page" id="p-reserve">
+          <h2>Reservation</h2>
+          <form id="form">
+            <label>Имя<input type="text" required></label>
+            <label>Телефон<input type="tel" required></label>
+            <label>Дата<input type="date" required></label>
+            <label>Время<input type="time" required></label>
+            <label>Гостей
+              <select>
+                <option>1</option><option>2</option><option>3</option><option>4</option>
+                <option>5</option><option>6</option><option>7</option><option>8</option>
+              </select>
+            </label>
+            <button class="submit" type="submit">Забронировать</button>
+            <p class="thanks" id="thanks">Спасибо! Мы свяжемся с вами для подтверждения.</p>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <p class="credit">Rabia's project</p>
+  </section>
+
+  <script>
+    var stage = document.getElementById("stage");
+    var lamps = document.querySelectorAll(".lamp");
+    var tabs = document.querySelectorAll(".tab");
+    var pages = document.querySelectorAll(".page");
+
+    lamps.forEach(function (lamp) {
+      lamp.addEventListener("click", function () {
+        stage.classList.toggle("lit");
+      });
+    });
+
+    tabs.forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        tabs.forEach(function (t) { t.classList.remove("active"); });
+        pages.forEach(function (p) { p.classList.remove("active"); });
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.page).classList.add("active");
+      });
+    });
+
+    document.getElementById("form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      document.getElementById("thanks").classList.add("show");
+      this.reset();
+    });
+  </script>
+</body>
+</html>
